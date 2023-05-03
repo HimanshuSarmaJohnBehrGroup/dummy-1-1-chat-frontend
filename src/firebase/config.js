@@ -1,9 +1,9 @@
 export const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-    authDomain: "dummy-1-1-chat.firebaseapp.com",
-    projectId: "dummy-1-1-chat",
-    storageBucket: "dummy-1-1-chat.appspot.com",
-    messagingSenderId: "957601981579",
-    appId: "1:957601981579:web:a54932488092ce97a1608e",
-    measurementId: "G-J5EY6ZZYNB"
+    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.REACT_APP_PROJECT_ID,
+    storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
+    messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
+    appId: process.env.REACT_APP_APP_ID,
+    measurementId: process.env.REACT_APP_MEASUREMENT_ID
 };

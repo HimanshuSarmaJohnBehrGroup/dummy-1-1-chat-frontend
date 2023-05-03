@@ -9,6 +9,9 @@ import { useDispatch } from 'react-redux';
 import { getToken } from 'firebase/messaging';
 import { messaging } from './firebase/firebase';
 
+// import moengage from '@moengage/web-sdk';
+// moengage.initialize({app_id: process.env})
+
 import { socket } from './socket/connection';
 import { getFormattedDurationHandler } from './helpers/helperMethods'
  
@@ -116,6 +119,7 @@ function App() {
   return (
     <Router>
       <div>
+        {/* Call Stats */}
         {callDetails.callDuration ? <div style={{
           position: 'fixed',
           top: '50%',
@@ -143,6 +147,7 @@ function App() {
             }}>Close</button>
           </div>
         </div> : null}
+        {/* Call Stats */}
         <Switch>
           <Route exact path="/">
             <Login />
