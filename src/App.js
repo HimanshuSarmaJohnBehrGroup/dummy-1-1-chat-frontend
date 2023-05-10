@@ -8,12 +8,11 @@ import { useDispatch } from 'react-redux';
 
 import { getToken } from 'firebase/messaging';
 import { messaging } from './firebase/firebase';
-
-// import moengage from '@moengage/web-sdk';
-// moengage.initialize({app_id: process.env})
+import mixpanel from 'mixpanel-browser';
 
 import { socket } from './socket/connection';
-import { getFormattedDurationHandler } from './helpers/helperMethods'
+import { getFormattedDurationHandler } from './helpers/helperMethods';
+import { setMixpanelInitializedHandler } from './Redux/root';
  
 import Room from "./pages/Room";
 import Login from "./pages/Login";
@@ -25,6 +24,12 @@ const callDetailsInit = {
   callDuration: ``,
   formattedTime: ``
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Environment Variables
+const mixpanelToken = process.env.REACT_APP_MIXPANEL_TOKEN;
+// Environment Variables
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function App() {
 
@@ -56,6 +61,8 @@ function App() {
     requestPermission();
   }, [requestPermission]);
 
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   useEffect(() => {
     socket.emit("/home", JSON.stringify({
       ...JSON.parse(localStorage.getItem('userData')),
@@ -79,6 +86,7 @@ function App() {
     })
   }, [dispatch])
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   useEffect(() => {
     const parsedCall = JSON.parse(localStorage.getItem('call'));
@@ -95,6 +103,28 @@ function App() {
     }
   }, []);
 
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  useEffect(() => {
+    if (mixpanel) {
+      mixpanel.init(mixpanelToken, { debug: true });
+      const userData = localStorage.getItem('userData');
+      let parsedUserData;
+      if (userData) {
+        parsedUserData = JSON.parse(userData);
+      }
+
+      if (parsedUserData) {
+        mixpanel.identify(parsedUserData.name)
+        mixpanel.people.set({ "$name": parsedUserData?.name, "$email": `${parsedUserData?.name}@mail.com` });
+        dispatch(setMixpanelInitializedHandler({
+          value: true
+        }))
+      }
+    }
+  }, [mixpanel])
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // useEffect(() => {
   //   const fetchLocalStorageCall = localStorage.getItem('call');

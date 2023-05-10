@@ -153,70 +153,7 @@ export default function Room(props) {
     }
     // End call handler...
 
-    // let joinRoom = () => {
-        
-
-    // }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    useEffect(() => {
-        let audioMuteCheckIntervalId = setInterval(() => {
-            if (room?.userList) {
-                for (let [key, value] of room.userList) {
-                    if (value.name !== auth?.name) {
-                        setOtherParticipant(otherParticipant => {
-                            return {
-                                ...otherParticipant,
-                                audio_muted: value.audioMuted
-                            }
-                        })
-                    }
-                }
-            }
-        }, 1000);
-        
-        return () => {
-            clearInterval(audioMuteCheckIntervalId);
-        }
-    }, []);
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    useEffect(() => {
-        socket.on(`/call-ended`, (data) => {
-            if (room) {
-                localStorage.setItem(`call`, JSON.stringify({
-                    ...JSON.parse(localStorage.getItem(`call`)),
-                    callEndTimeStamp: data?.callEndTimeStamp
-                }))
-
-                room.disconnect();
-                // endCallHandler(data);
-            }
-        })
-
-        return () => {
-            socket.off(`/call-ended`);
-        }
-    }, [])
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    useEffect(() => {
-        let intervalId = setInterval(() => {
-            const updatedCallDuration = Math.floor((Date.now() - JSON.parse(localStorage.getItem(`call`))?.callStartTimeStamp) / 1000);
-            setCallDuration(updatedCallDuration)
-        }, 1000);
-
-        return () => {
-            clearInterval(intervalId);
-        }
-    }, [])
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    useEffect(() => {
+    let joinRoom = () => {
         console.log('joining the room...');
         document.querySelector("#local_view").classList.add("local_class_peep");
         document.querySelector("#remote_view").classList.add("remote_class_peep");
@@ -394,6 +331,68 @@ export default function Room(props) {
                 });
             }
         });
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    useEffect(() => {
+        let audioMuteCheckIntervalId = setInterval(() => {
+            if (room?.userList) {
+                for (let [key, value] of room.userList) {
+                    if (value.name !== auth?.name) {
+                        setOtherParticipant(otherParticipant => {
+                            return {
+                                ...otherParticipant,
+                                audio_muted: value.audioMuted
+                            }
+                        })
+                    }
+                }
+            }
+        }, 1000);
+        
+        return () => {
+            clearInterval(audioMuteCheckIntervalId);
+        }
+    }, [room, auth]);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    useEffect(() => {
+        socket.on(`/call-ended`, (data) => {
+            if (room) {
+                localStorage.setItem(`call`, JSON.stringify({
+                    ...JSON.parse(localStorage.getItem(`call`)),
+                    callEndTimeStamp: data?.callEndTimeStamp
+                }))
+
+                room.disconnect();
+                // endCallHandler(data);
+            }
+        })
+
+        return () => {
+            socket.off(`/call-ended`);
+        }
+    }, [room])
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    useEffect(() => {
+        let intervalId = setInterval(() => {
+            const updatedCallDuration = Math.floor((Date.now() - JSON.parse(localStorage.getItem(`call`))?.callStartTimeStamp) / 1000);
+            setCallDuration(updatedCallDuration)
+        }, 1000);
+
+        return () => {
+            clearInterval(intervalId);
+        }
+    }, [])
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    useEffect(() => {
+        joinRoom();
     }, []);
 
     // console.log(callDuration);

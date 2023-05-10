@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useHistory } from "react-router-dom"
 import { useSelector, useDispatch } from 'react-redux'
 
+import mixpanel from 'mixpanel-browser';
+
 import { setCallDetails, setCallDetailsOtherParticipantHandler } from '../Redux/root';
 import { createRoom as createRoomApi, joinRoom } from '../service/api.js'
 import { socket } from '../socket/connection.js'
@@ -35,6 +37,7 @@ const Login = (props) => {
     const history = useHistory();
 
     const { allUsers, auth } = useSelector(store => store.appData);
+    const { mixpanelInitialized } = useSelector(store => store.appData)
 
     const [user, setUser] = useState({ name: '', room: '', role: '', callType: '' });
     const [error, setError] = useState("");
@@ -89,13 +92,23 @@ const Login = (props) => {
     }
 
     const createNewRoom = useCallback((user) => {
+        const parsedUserData = JSON.parse(localStorage.getItem('userData'));
         socket.emit("/create-token", 
         JSON.stringify({
-            ...JSON.parse(localStorage.getItem('userData')), 
+            ...parsedUserData, 
             role: "participant", 
             callType: user.callType,
             receiver: user.name
         }));
+
+        if (mixpanelInitialized) {
+            console.log('call-initiated');
+            mixpanel.track('call-initiated', {
+                initiator: parsedUserData.name,
+                receiver: user.name
+            });
+        }
+        
         // setLoading(true);
         // createRoomApi()
         //     .then(resp => {
@@ -105,7 +118,7 @@ const Login = (props) => {
         //         }
         //     })
         //     .catch(err => console.log(err));
-    }, []);
+    }, [mixpanelInitialized]);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // General handler functions..
@@ -133,7 +146,11 @@ const Login = (props) => {
         console.log(realTimeManagementReceiver);
         return realTimeManagementReceiver.token;
     }, [realTimeManagementReceiver]);
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    const getMixpanelInitiated = useCallback(() => {
+        return mixpanelInitialized;
+    }, [mixpanelInitialized])
     // Get data for event listener handlers...
 
     const callCancelledStateCleanupHandler = () => {
@@ -275,7 +292,7 @@ const Login = (props) => {
             setLocalStorageKeyCall({
                 callStartTimeStamp: data.callStartTimeStamp
             })
-            history.push(`/room/${getInitiatorTokenHandler()}`)
+            history.push(`/room/${getInitiatorTokenHandler()}`);
         })
 
         socket.on(`initiator-call-reject`, () => {
@@ -359,7 +376,6 @@ const Login = (props) => {
 
                 setRole('receiver')
 
-
                 console.log('receiver');
                 dispatch(setCallDetails([{
                     key: 'callType',
@@ -386,6 +402,14 @@ const Login = (props) => {
 
         socket.on(`receiver-call-start`, (data) => {
             console.log(`receiver-call-start`)
+
+            if (mixpanelInitialized) {
+                mixpanel.track('call-started', {
+                    initiator: realTimeManagementReceiver.name,
+                    receiver: JSON.parse(localStorage.getItem('userData'))?.name
+                })
+            }
+            
             setLocalStorageKeyCall({
                 callStartTimeStamp: data.callStartTimeStamp
             })
@@ -457,6 +481,31 @@ const Login = (props) => {
             createNewRoom(user);
         }
     }, [user, createNewRoom]);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // For tracking time spent by user on this page...
+
+    useEffect(() => {
+        if (mixpanelInitialized) {
+            console.log('event timed');
+            mixpanel.time_event("login_page_exit");
+        }
+    }, [mixpanel, mixpanelInitialized])
+
+    // For tracking time spent by user on this page...
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    useEffect(() => {
+        return () => {
+            if (getMixpanelInitiated()) {
+                console.log('login page exit');
+                mixpanel.track('login_page_exit');
+            }   
+        }
+    }, [getMixpanelInitiated])
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     return (
         <main>

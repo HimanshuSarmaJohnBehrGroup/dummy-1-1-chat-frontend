@@ -12,7 +12,8 @@ export const appDataSlice = createSlice({
             otherParticipant: {
                 isMuted: false
             }
-        }
+        },
+        mixpanelInitialized: false
     },
 
     reducers: {
@@ -44,6 +45,10 @@ export const appDataSlice = createSlice({
                     [action.payload.key]: action.payload.value
                 }
             }
+        },
+        setMixpanelInitializedHandler(state, action) {
+            console.log(action.payload);
+            state.mixpanelInitialized = action.payload.value
         }
     },
   
@@ -62,5 +67,6 @@ export const {
     setAppDataHandler,
     setAuthHandler,
     setCallDetails,
-    setCallDetailsOtherParticipantHandler
+    setCallDetailsOtherParticipantHandler,
+    setMixpanelInitializedHandler
 } = appDataSlice.actions;
